@@ -31,16 +31,22 @@ output_dim = env.action_space.n
 
 def create_policy():
     return nn.Sequential(
-        nn.Linear(input_dim, hidden_dim),
+        nn.Linear(input_dim, hidden_dim).double(),
         nn.ReLU(),
-        nn.Linear(hidden_dim, hidden_dim),
+        nn.Linear(hidden_dim, hidden_dim).double(),
         nn.ReLU(),
-        nn.Linear(hidden_dim, output_dim),
+        nn.Linear(hidden_dim, output_dim).double(),
         nn.Softmax(dim=-1),
     )
 
 policy = create_policy()
 observation, _ = env.reset()
-tensor = policy(torch.tensor(observation))
+tensor = policy(torch.tensor(observation, dtype=torch.float64))
 
 print(tensor)
+
+action = env.action_space.sample(probability=tensor.detach().cpu().numpy())
+print(action)
+
+step = env.step(action)
+print(step)
