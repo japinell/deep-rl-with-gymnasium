@@ -7,3 +7,17 @@ import torch.distributions as distributions
 import numpy as np
 import gymnasium as gym 
 
+#for i in gym.envs.registry.keys():
+#    print(i)
+
+# Create the CartPole environment
+env = gym.make("CartPole-v1", render_mode="rgb_array")
+
+# print(env.observation_space)
+# print(env.action_space)
+# print(env.action_space.n)
+# print(env.action_space.sample())
+
+observation, info = env.reset()
+print(observation)
+print(info)
