@@ -50,3 +50,72 @@ print(action)
 
 step = env.step(action)
 print(step)
+
+# Train and validate policy
+# Hyperparameters
+learning_rate = 0.01
+gamma = 0.99 # Discount factor
+epochs = 500
+
+# Optimizer
+policy = create_policy()
+optimizer = optim.Adam(policy.parameters(), lr=learning_rate)
+
+# Training loop
+for episode in range (epochs):
+    observation, _ = env.reset()
+    episode_rewards = []
+    log_probs = []
+
+    while True:
+        # Get action probabilities from the policy
+        action_probs = policy(torch.tensor(observation, dtype=torch.float64))
+        
+        # Sample an action from the action probabilities
+        #action = torch.multinomial(action_probs, num_samples=1).item()
+        action = env.action_space.sample(probability=action_probs.detach().cpu().numpy())
+
+        # Log the probabilities of the action taken
+        log_prob = torch.log(action_probs[action]).flatten()
+        log_probs.append(log_prob)
+
+        # Take the action in the environment
+        next_observation, reward, terminated, truncated, _ = env.step(action)
+        episode_rewards.append(reward)
+
+        observation = next_observation
+
+        if terminated or truncated:
+            break
+
+    # Calculate the discounted rewards  
+    discounted_rewards = []
+    cumulative_reward = 0
+
+    for reward in reversed(episode_rewards):
+        cumulative_reward = reward + gamma * cumulative_reward
+        discounted_rewards.insert(0, cumulative_reward)
+
+    # Normalize the discounted rewards
+    discounted_rewards = torch.tensor(discounted_rewards, dtype=torch.float64)
+    discounted_rewards = (discounted_rewards - discounted_rewards.mean()) / (discounted_rewards.std())
+
+    # Calculate the policy gradient loss
+    # policy_loss = []
+    # for log_prob, reward in zip(log_probs, discounted_rewards):
+    #     policy_loss.append(-log_prob * reward)
+    # policy_loss = torch.cat(policy_loss).sum()
+    policy_loss = -(torch.cat(log_probs) * discounted_rewards).sum()
+
+    # Backpropagation
+    optimizer.zero_grad()
+    policy_loss.backward()
+    optimizer.step()
+
+    if episode % 20 == 0:
+        # Print the total reward for the episode
+        print(f"Episode {episode + 1}/{epochs}, Total Reward: {sum(episode_rewards)}")
+
+
+# Test the trained policy
+policy.eval()
