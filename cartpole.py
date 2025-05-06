@@ -61,6 +61,8 @@ epochs = 500
 policy = create_policy()
 optimizer = optim.Adam(policy.parameters(), lr=learning_rate)
 
+epoch_rewards = []
+
 # Training loop
 for episode in range (epochs):
     observation, _ = env.reset()
@@ -112,10 +114,18 @@ for episode in range (epochs):
     policy_loss.backward()
     optimizer.step()
 
-    if episode % 20 == 0:
+    epoch_rewards.append(sum(episode_rewards))
+
+    if episode % 50 == 0:
         # Print the total reward for the episode
         print(f"Episode {episode + 1}/{epochs}, Total Reward: {sum(episode_rewards)}")
 
 
 # Test the trained policy
 policy.eval()
+
+# Plot the results
+import plotly.express as px
+
+fig = px.line(x=range(len(epoch_rewards)), y=epoch_rewards, labels={'x': 'Epoch', 'y': 'Reward'}, title='Epoch Reward over Time')
+fig.show()
