@@ -56,6 +56,8 @@ print(step)
 learning_rate = 0.01
 gamma = 0.99 # Discount factor
 epochs = 500
+reward_goal = 400
+over_last_episodes = 25
 
 # Optimizer
 policy = create_policy()
@@ -115,11 +117,15 @@ for episode in range (epochs):
     optimizer.step()
 
     epoch_rewards.append(sum(episode_rewards))
+    mean_epoch_reward = np.mean(epoch_rewards[-over_last_episodes:])
 
     if episode % 50 == 0:
         # Print the total reward for the episode
         print(f"Episode {episode + 1}/{epochs}, Total Reward: {sum(episode_rewards)}")
 
+    if mean_epoch_reward > reward_goal:
+        print(f"Training completed in {episode + 1} episodes, mean reward: {mean_epoch_reward:.1f}")
+        break
 
 # Test the trained policy
 policy.eval()
